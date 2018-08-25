@@ -23,8 +23,8 @@
 #define REF_AVCC ( 1 << REFS0 )
 #define REF_INIT ( 1 << REFS0 ) | ( 1 << REFS1 ) 
 
-#define YSENSOR 0x00 //Y-axis sensor is on port ADC0
-#define XSENSOR 0x01 //X-axis sensor is on port ADC1
+#define YSENSOR 0x01 //Y-axis sensor is on port ADC1
+#define XSENSOR 0x00 //X-axis sensor is on port ADC0
 
 void ADC_init() {
 	ADCSRA |= (1 << ADEN) | (1 << ADSC) | (1 << ADATE);
@@ -70,7 +70,7 @@ unsigned char readXAxis(void) {
 	if (adcVal > (XAXISINIT + 20)) {
 		return RIGHT;
 	}
-	else if (adcVal < (XAISINIT - 20)) {
+	else if (adcVal < (XAXISINIT - 20)) {
 		return LEFT;
 	}
 

@@ -6,33 +6,42 @@
  */ 
 
 #include <avr/io.h>
-#define REF_AVCC (1 <<REFS0) // Reference = AVCC = 5 V
-#define REF_INT (1 << REFS0) | (1 << REFS1) //Internal reference 2.56 V
-#define UPAxisInit 543
-#define LRAxisInit 551
-
-void ADC_init();
-void wait(long);
+#include "analog_stick.h"
 
 int main(void)
 {
+	DDRA = 0x00; PORTA = 0xFF;
+	DDRB = 0xFF; PORTB = 0x00;
+	
+	unsigned char LED = 0;
+	
+	unsigned char yval;
+	unsigned char xval;
+	ADC_init();
     /* Replace with your application code */
     while (1) 
     {
+		LED = 0;
+		xval = readXAxis();
+		yval = readYAxis();
+		
+		if ( yval == UP ){
+			LED |= 0x01;
+		} 
+		
+		if ( yval == DOWN ){
+			LED |= 0x02;
+		}
+		
+		if ( xval == RIGHT ){
+			LED |= 0x04;
+		}
+		
+		if ( xval == LEFT ){
+			LED |= 0x08;
+		}
+		
+		PORTB = LED;
     }
 }
 
-void ADC_init() {
-	ADCSRA |= (1 << ADEN) | (1 << ADSC) | (1 << ADATE);
-	// ADEN: setting this bit enables analog-to-digital conversion.
-	// ADSC: setting this bit starts the first conversion.
-	// ADATE: setting this bit enables auto-triggering. Since we are
-	//        in Free Running Mode, a new conversion will trigger whenever
-	//        the previous conversion completes.
-}
-
-void wait(long numOP){
-	for( long i = 0; i < numOP; i++){
-		asm("nop");
-	}
-}
