@@ -10,12 +10,11 @@
 #define START_SPACE 17
 
 unsigned char jump_flag = 0;
+unsigned char char_update = 0;
 unsigned char characterpos = START_SPACE; //Start the character at the bottom left 
 enum move_sm {move_init, move_wait, move_movement, move_jump, move_fall};
 
 unsigned char move_character(unsigned char pos, unsigned char direction) {
-	LCD_Cursor(pos);
-	LCD_WriteData(EMPTY);
 
 	switch (direction) {
 	case UP:
@@ -47,9 +46,6 @@ unsigned char move_character(unsigned char pos, unsigned char direction) {
 		break;
 	}
 
-	LCD_Cursor(pos);
-	LCD_WriteData(USER_CHAR);
-	LCD_Cursor_Off();
 	return pos;
 
 }
@@ -74,12 +70,15 @@ int move_tick(int state) {
 		break;
 	case move_movement:
 		state = move_wait;
+		char_update = 0;
 		break;
 	case move_jump:
 		state = move_fall;
+		char_update = 0;
 		break;
 	case move_fall:
 		state = move_wait;
+		char_update = 0;
 		break;
 	default:
 		state = move_init;
@@ -89,22 +88,22 @@ int move_tick(int state) {
 	switch (state) {
 	case move_init:
 		characterpos = START_SPACE;
-		LCD_Cursor(characterpos);
-		LCD_WriteData(USER_CHAR);
-		LCD_Cursor_Off();
 		break;
 	case move_wait:
 		break;
 	case move_movement:
 		characterpos = move_character(characterpos, xval);
+		char_update = 1;
 		break;
 	case move_jump:
 		characterpos = move_character(characterpos, UP);
 		characterpos = move_character(characterpos, xval);
+		char_update = 1;
 		break;
 	case move_fall:
 		characterpos = move_character(characterpos, DOWN);
 		characterpos = move_character(characterpos, xval);
+		char_update = 1;
 	default:
 		break;
 	}
