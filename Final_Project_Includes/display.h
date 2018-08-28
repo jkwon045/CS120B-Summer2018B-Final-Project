@@ -16,14 +16,13 @@ void insertObject(void) {
 			LCD_Cursor(objarray[i]);
 			LCD_WriteData(OBJ_CHAR);
 		}
-
 	}
 	LCD_Cursor_Off();
 }
 
 void insertEnemy(void) {
 	for (unsigned char i = 0; i < MAX_ENEMIES; i++) {
-		if (enemyarray[i] != INVALID_ENEMY_INDEX && enemyarray[i] < 33) {
+		if (enemyarray[i] != INVALID_ENEMY_INDEX && enemyarray[i] < 33 && enemyarray[i] > 16) {
 			LCD_Cursor(enemyarray[i]);
 			LCD_WriteData(ENEMY_CHAR);
 		}
@@ -64,6 +63,7 @@ int disp_tick(int state) {
 		case disp_update:
 			clearScreen();
 			insertEnemy();
+			insertObject();
 			insertCharacter();
 			break;
 		default:
