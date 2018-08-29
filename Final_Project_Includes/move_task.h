@@ -2,15 +2,18 @@
 #define MOVE_TASK_H
 
 #include <avr/io.h>
+#include <avr/eeprom.h>
 #include "io.c"
 #include "analog_stick.h"
 #include "enemy.h"
 #include "obstacle.h"
 
-#define USER_CHAR '@'
+#define USER_CHAR 0
 #define EMPTY ' '
 #define START_SPACE 17
 
+unsigned char score = 0;
+unsigned char highScore = 0;
 unsigned char jump_flag = 0;
 unsigned char user_death_flag = 0;
 unsigned char char_update = 0;
@@ -71,6 +74,10 @@ unsigned char move_character(unsigned char pos, unsigned char direction) {
 
 }
 
+void saveScore (unsigned char score){
+	eeprom_write_byte(0, score);
+}
+
 void checkEnemyHit(void){
 	for ( unsigned char i = 0; i < MAX_ENEMIES; i++){
 		if(enemyarray[i] == INVALID_ENEMY_INDEX){
@@ -80,6 +87,10 @@ void checkEnemyHit(void){
 			user_death_flag = 1;
 		}
 	}
+}
+
+void loadScore( void ){
+	highScore = eeprom_read_byte(0);
 }
 
 void checkObstacleCollision(unsigned char pos){
@@ -101,7 +112,7 @@ void checkStomp(void){
 		if(characterpos == enemyarray[i]){
 			enemy_death_flag = 1;
 			enemy_num_died = i;
-			num_enemy_killed++;
+			score+=1;
 		}
 	}
 }
@@ -122,6 +133,7 @@ int move_tick(int state) {
 	unsigned char xval = readXAxis();
 	switch (state) {
 		case move_init:
+			loadScore();
 			state = move_wait;
 			break;
 		case move_wait:
@@ -183,6 +195,7 @@ int move_tick(int state) {
 				shift_enemy_flag = 1;
 				shift_obj_flag = 1;
 				characterpos--;
+				score++;
 			}
 			checkEnemyHit();
 			break;
@@ -194,11 +207,13 @@ int move_tick(int state) {
 				shift_enemy_flag = 1;
 				shift_obj_flag = 1;
 				characterpos--;
+				score++;
 			}
 			else if(characterpos < 17 && characterpos >= 9){
 				shift_enemy_flag = 1;
 				shift_obj_flag = 1;
 				characterpos--;
+				score++;
 			}
 			break;
 		case move_fall:
@@ -209,6 +224,7 @@ int move_tick(int state) {
 				shift_enemy_flag = 1;
 				shift_obj_flag = 1;
 				characterpos--;
+				score++;
 			}
 			break;
 		case move_on_obstacle:
@@ -225,18 +241,18 @@ int move_tick(int state) {
 				shift_enemy_flag = 1;
 				shift_obj_flag = 1;
 				characterpos--;
+				score++;
 			}
 			else if(characterpos < 17 && characterpos >= 9){
 				shift_enemy_flag = 1;
 				shift_obj_flag = 1;
 				characterpos--;
+				score++;
 			}
 			break;
 		default:
 			break;
 	}
-	
-	PORTB = state;
 	return state;
 }
 #endif

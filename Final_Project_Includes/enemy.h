@@ -8,7 +8,7 @@
 #include "move_task.h"
 
 #define MAX_ENEMIES 3
-#define ENEMY_CHAR '#'
+#define ENEMY_CHAR 1
 #define INVALID_ENEMY_INDEX 34
 //Second row offset is 16, defined in obstacle.h
 
@@ -31,6 +31,8 @@ enum enemy_move_states {enemy_move_init, enemy_move_wait, enemy_move_move, enemy
 
 static char enemyarray[MAX_ENEMIES] = { INVALID_ENEMY_INDEX };
 unsigned char num_enemy = 0;
+
+void checkEnemyHit();
 
 void initENEMY(void) {
 	unsigned char genENEMY = rand() % MAX_ENEMIES;
@@ -62,33 +64,30 @@ void initENEMY(void) {
 
 //Should shift objects, then shift enemies, otherwise enemies end up overwritten by objects
 void shiftEnemies(void) {
-	for (unsigned char i = 0; i < num_enemy; i++) {
-		unsigned char temp = enemyarray[i]-1;
-		if ((enemyarray[i] != INVALID_ENEMY_INDEX) && (temp < 17)) {
+	for (unsigned char i = 0; i < MAX_ENEMIES; i++) {
+		unsigned char temp = enemyarray[i];
+		if (temp == INVALID_ENEMY_INDEX){
+			continue;
+		}
+		if ((temp-1) < 17) {
 			enemyarray[i] = INVALID_ENEMY_INDEX;
 			num_enemy--;
 		}
 		else {
-			unsigned char move = 1;
-			for (unsigned char j = 0; j < MAX_OBJECTS; j++) {
-				if (enemyarray[i] == objarray[j]) {
-					move = 0;
-				}
-			}
-			if (move) enemyarray[i] = enemyarray[i] - 1;
+			enemyarray[i] = temp - 1;
 		}	
 	}
 }
 
 //Call after shifting enemies
 void generateNewEnemy(void) {
-	unsigned char gen = rand() % 5; //20% chance to generate an enemy
-
+	unsigned char gen = rand()%5; //20% chance to generate an enemy
+	
 	if (gen == 0 && num_enemy < MAX_ENEMIES) {
 		unsigned char i = 0;
 
 		for (; i < MAX_ENEMIES && enemyarray[i] != INVALID_ENEMY_INDEX; i++) {}
-		objarray[i] = INVALID_ENEMY_INDEX - 1;
+		enemyarray[i] = INVALID_ENEMY_INDEX - 1;
 		num_enemy++;
 	}
 }
@@ -134,6 +133,7 @@ void enemyMove(unsigned char index, char direction) {
 void removeEnemy(unsigned char index){
 	num_enemy--;
 	enemyarray[index] = INVALID_ENEMY_INDEX;
+	
 }
 
 //State machine for enemy movement
@@ -168,11 +168,11 @@ int enemy_tick(int state) {
 
 	switch (state) {
 		case enemy_move_init:
-			initENEMY();
 			break;
 		case enemy_move_wait:
 			if(enemy_death_flag){
 				removeEnemy(enemy_num_died);
+				enemy_death_flag = 0;
 			}
 			break;
 		case enemy_move_move:
@@ -185,6 +185,7 @@ int enemy_tick(int state) {
 					}
 				}
 			}
+			checkEnemyHit();
 			break;
 		case enemy_move_shift:
 			shiftEnemies();

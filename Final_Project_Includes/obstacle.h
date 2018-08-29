@@ -6,7 +6,7 @@
 #include "io.c"
 
 #define MAX_OBJECTS 4
-#define OBJ_CHAR 0xFF
+#define OBJ_CHAR 2
 #define INVALID_OBJ_INDEX 33
 #define SECOND_ROW_OFFSET 16
 
@@ -39,7 +39,6 @@ void initOBJ(void) {
 }
 
 void shiftObjects(void) {
-	unsigned char n = 1;
 	for (unsigned char i = 0; i < MAX_OBJECTS; i++) {
 		unsigned char temp = objarray[i];
 		if (temp == INVALID_OBJ_INDEX ) continue;
@@ -50,10 +49,6 @@ void shiftObjects(void) {
 		else {
 			objarray[i] = temp - 1;
 		}
-		LCD_Cursor(n++);
-		LCD_WriteData((objarray[i]/10)+'0');
-		LCD_Cursor(n++);
-		LCD_WriteData((objarray[i]%10)+'0');
 	}	
 }
 
@@ -94,7 +89,6 @@ int obj_tick(int state){
 	
 	switch(state){
 		case obj_init:
-			initOBJ();
 			break;
 		case obj_wait:
 			break;

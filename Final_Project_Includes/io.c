@@ -60,6 +60,18 @@ void LCD_DisplayString( unsigned char column, const unsigned char* string) {
    }
 }
 
+void LCD_WriteString( unsigned char column, const unsigned char* string){
+	for (unsigned char i = column; i < 16; i++){
+		LCD_Cursor(i);
+		LCD_WriteData(' ');
+	}
+	unsigned char c = column;
+	while(*string) {
+		LCD_Cursor(c++);
+		LCD_WriteData(*string++);
+	}
+}
+
 void LCD_Cursor(unsigned char column) {
    if ( column < 17 ) { // 16x1 LCD: column < 9
 						// 16x2 LCD: column < 17
@@ -83,6 +95,38 @@ void delay_ms(int miliSec) //for 8 Mhz crystal
   {
    asm("nop");
   }
+}
+
+void LCD_Build(){
+	LCD_WriteCommand(0x40);       //Load the location where we want to store
+	LCD_WriteData(0x0E);      //Load row 1 data
+	LCD_WriteData(0x0E);      //Load row 2 data
+	LCD_WriteData(0x0E);      //Load row 3 data
+	LCD_WriteData(0x04);      //Load row 4 data
+	LCD_WriteData(0x0E);      //Load row 5 data
+	LCD_WriteData(0x15);      //Load row 6 data
+	LCD_WriteData(0x0A);      //Load row 7 data
+	LCD_WriteData(0x0A);      //Load row 8 data
+	
+	LCD_WriteCommand(0x48);
+	LCD_WriteData(0x00);
+	LCD_WriteData(0x04);
+	LCD_WriteData(0x0E);
+	LCD_WriteData(0x1F);
+	LCD_WriteData(0x1F);
+	LCD_WriteData(0x0E);
+	LCD_WriteData(0x0E);
+	LCD_WriteData(0x1B);
+	
+	LCD_WriteCommand(0x50);
+	LCD_WriteData(0x1F);
+	LCD_WriteData(0x11);
+	LCD_WriteData(0x1B);
+	LCD_WriteData(0x0A);
+	LCD_WriteData(0x0A);
+	LCD_WriteData(0x0A);
+	LCD_WriteData(0x0A);
+	LCD_WriteData(0x0A);
 }
 
 #endif

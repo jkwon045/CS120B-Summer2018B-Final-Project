@@ -6,9 +6,13 @@
 #include "obstacle.h"
 #include "move_task.h"
 #include "io.c"
+#define MAXDIGITS 5
 
 //Place objects, then enemies, then character
-enum disp_states {disp_init, disp_update};
+enum disp_states {disp_init, disp_update, disp_death_screen, disp_play_again};
+
+char msg[16] = "Score: ";
+char highScoreMsg[16] = "High Score: ";
 
 void insertObject(void) {
 	for (unsigned char i = 0; i < MAX_OBJECTS; i++) {
@@ -44,13 +48,70 @@ void clearScreen(void){
 	}
 }
 
+void createMessage(unsigned char score){
+	unsigned char scoreString[MAXDIGITS] = {};
+	unsigned char j = 0;
+	while(msg[j] != '\0' && j < (16 - MAXDIGITS)) j++;
+	short i = 0;
+	if (score == 0 ) {
+		msg[j] = '0';
+		msg[j+1] = '\0';
+		return;
+	}
+	while(score > 0 ){
+		scoreString[i] = score%10 + '0';
+		score = score/10;
+	}
+	
+	for(; i >= 0; i--){
+		msg[j++] = scoreString[i];
+	}
+	msg[j] = '\0';
+}
+
+void createHighScoreMessage(unsigned char score){
+	unsigned char scoreString[MAXDIGITS] = {};
+
+	unsigned char j = 0;
+	while(highScoreMsg[j] != '0' && j < (16 - MAXDIGITS) ) j++;
+	short i = 0;
+	if (score == 0 ){
+		highScoreMsg[j] = '0';
+		highScoreMsg[j+1] = '\0';
+		return;
+	}
+	while(score > 0 ){
+		scoreString[i] = score%10 + '0';
+		score = score/10;
+	}
+	
+	for(; i >= 0; i--){
+		highScoreMsg[j++] = scoreString[i];
+	}
+	highScoreMsg[j] = '\0';
+}
+
 int disp_tick(int state) {
 	switch (state) {
 		case disp_init:
 			state = disp_update;
 			break;
 		case disp_update:
-			state = disp_update;
+			if(user_death_flag){
+				state = disp_death_screen;
+				clearScreen();
+				createMessage(score);
+				createHighScoreMessage(highScore);
+				LCD_WriteString(1, (const unsigned char*)msg);
+				LCD_WriteString(17, (const unsigned char*)highScoreMsg);
+			} else {
+				state = disp_update;
+			}
+			break;
+		case disp_death_screen:
+			state = disp_death_screen;
+			break;
+		case disp_play_again:
 			break;
 		default:
 			state = disp_init;
@@ -66,11 +127,21 @@ int disp_tick(int state) {
 			insertObject();
 			insertCharacter();
 			break;
+		case disp_death_screen:
+			if(score < highScore){
+				highScore = score;
+				saveScore(highScore);
+			}
+			break;
+		case disp_play_again:
+			break;
 		default:
 			break;
 	}
 
 	return state;		
 }
+
+
 
 #endif
