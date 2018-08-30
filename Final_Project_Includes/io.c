@@ -61,7 +61,7 @@ void LCD_DisplayString( unsigned char column, const unsigned char* string) {
 }
 
 void LCD_WriteString( unsigned char column, const unsigned char* string){
-	for (unsigned char i = column; i < 16; i++){
+	for (unsigned char i = column; i < 17; i++){
 		LCD_Cursor(i);
 		LCD_WriteData(' ');
 	}

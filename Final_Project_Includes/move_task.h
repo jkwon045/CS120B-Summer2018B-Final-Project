@@ -12,14 +12,17 @@
 #define EMPTY ' '
 #define START_SPACE 17
 
-unsigned char score = 0;
-unsigned char highScore = 0;
+static unsigned char score = 0;
+static unsigned char highScore = 0;
 unsigned char jump_flag = 0;
 unsigned char user_death_flag = 0;
 unsigned char char_update = 0;
 unsigned char num_enemy_killed = 0;
 unsigned char on_obstacle = 0;
 unsigned char objCollision = 0;
+ unsigned char char_start = 0;
+//reset flag
+unsigned char char_reset_flag = 0;
 //flags to scroll screen after user hits a certain point
 
 unsigned char characterpos = START_SPACE; //Start the character at the bottom left 
@@ -75,7 +78,9 @@ unsigned char move_character(unsigned char pos, unsigned char direction) {
 }
 
 void saveScore (unsigned char score){
+	//eeprom_busy_wait();
 	eeprom_write_byte(0, score);
+	//eeprom_busy_wait();
 }
 
 void checkEnemyHit(void){
@@ -89,8 +94,14 @@ void checkEnemyHit(void){
 	}
 }
 
-void loadScore( void ){
-	highScore = eeprom_read_byte(0);
+unsigned char loadScore( void ){
+	if(eeprom_read_byte(0) == 255){
+		eeprom_write_byte(0, 0);
+	}
+	unsigned char help = eeprom_read_byte(0);
+	eeprom_busy_wait();
+	
+	return help;
 }
 
 void checkObstacleCollision(unsigned char pos){
@@ -112,7 +123,7 @@ void checkStomp(void){
 		if(characterpos == enemyarray[i]){
 			enemy_death_flag = 1;
 			enemy_num_died = i;
-			score+=1;
+			score++;
 		}
 	}
 }
@@ -133,11 +144,19 @@ int move_tick(int state) {
 	unsigned char xval = readXAxis();
 	switch (state) {
 		case move_init:
-			loadScore();
-			state = move_wait;
+			char_reset_flag = 0;
+			if(char_start && !char_reset_flag){
+				state = move_wait;
+				char_start = 0;
+			}
 			break;
 		case move_wait:
-			if (yval == xval) { //In this case they both return NONE which indicates no movement
+			if(char_reset_flag){
+				state = move_init;
+				char_reset_flag = 0;
+				char_start = 0;
+			}
+			else if (yval == xval) { //In this case they both return NONE which indicates no movement
 				state = move_wait;
 			}
 			else if(yval == UP){
@@ -148,20 +167,43 @@ int move_tick(int state) {
 			}
 			break;
 		case move_movement:
-			state = move_wait;
+			if(char_reset_flag){
+				state = move_init;
+				char_reset_flag = 0;
+				char_start = 0;
+			}
+			else {
+				state = move_wait;	
+			}
 			break;
 		case move_jump:
-			if(!on_obstacle){
+			if(char_reset_flag){
+				state = move_init;
+				char_reset_flag = 0;
+				char_start = 0;
+			}
+			else if(!on_obstacle){
 				state = move_fall;
 			} else {
 				state = move_on_obstacle;
 			}
 			break;
 		case move_fall:
-			state = move_wait;
+			if(char_reset_flag){
+				state = move_init;
+				char_reset_flag = 0;
+				char_start = 0;
+			}
+			else{
+				state = move_wait;
+			}
 			break;
 		case move_on_obstacle:
-			if(xval && on_obstacle){
+			if(char_reset_flag){
+				state = move_init;
+				char_reset_flag = 0;
+			}
+			else if(xval && on_obstacle){
 				state = move_obstacle_movement;
 			}
 			 else if (on_obstacle) {
@@ -172,7 +214,11 @@ int move_tick(int state) {
 			}
 			break;
 		case move_obstacle_movement:
-			if(on_obstacle){
+			if(char_reset_flag){
+				state = move_init;
+				char_reset_flag = 0;
+			}
+			else if(on_obstacle){
 				state = move_on_obstacle;
 			} else {
 				state = move_fall;
@@ -195,7 +241,6 @@ int move_tick(int state) {
 				shift_enemy_flag = 1;
 				shift_obj_flag = 1;
 				characterpos--;
-				score++;
 			}
 			checkEnemyHit();
 			break;
@@ -207,13 +252,11 @@ int move_tick(int state) {
 				shift_enemy_flag = 1;
 				shift_obj_flag = 1;
 				characterpos--;
-				score++;
 			}
 			else if(characterpos < 17 && characterpos >= 9){
 				shift_enemy_flag = 1;
 				shift_obj_flag = 1;
 				characterpos--;
-				score++;
 			}
 			break;
 		case move_fall:
@@ -224,7 +267,6 @@ int move_tick(int state) {
 				shift_enemy_flag = 1;
 				shift_obj_flag = 1;
 				characterpos--;
-				score++;
 			}
 			break;
 		case move_on_obstacle:
@@ -241,13 +283,11 @@ int move_tick(int state) {
 				shift_enemy_flag = 1;
 				shift_obj_flag = 1;
 				characterpos--;
-				score++;
 			}
 			else if(characterpos < 17 && characterpos >= 9){
 				shift_enemy_flag = 1;
 				shift_obj_flag = 1;
 				characterpos--;
-				score++;
 			}
 			break;
 		default:

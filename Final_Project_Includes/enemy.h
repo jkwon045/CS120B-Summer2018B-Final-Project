@@ -18,12 +18,14 @@ unsigned char enemy_num_died = MAX_ENEMIES;
 //Flag set by move task
 unsigned char shift_enemy_flag = 0;
 
+ unsigned char enemy_reset_flag = 0;
+
 //counter for how long enemy should stay still/move in ticks
 #define second3 15
 unsigned char speed = second3;
 unsigned char enemyticks = 0;
 unsigned char enemyUpdate = 1;
-
+unsigned char enemy_start = 0;
 //defining movement directions for enemies
 
 enum enemy_move_states {enemy_move_init, enemy_move_wait, enemy_move_move, enemy_move_shift}; //Probably want a 300 ms period, basically slower than user input
@@ -33,6 +35,7 @@ static char enemyarray[MAX_ENEMIES] = { INVALID_ENEMY_INDEX };
 unsigned char num_enemy = 0;
 
 void checkEnemyHit();
+void checkStomp();
 
 void initENEMY(void) {
 	unsigned char genENEMY = rand() % MAX_ENEMIES;
@@ -81,7 +84,7 @@ void shiftEnemies(void) {
 
 //Call after shifting enemies
 void generateNewEnemy(void) {
-	unsigned char gen = rand()%5; //20% chance to generate an enemy
+	unsigned char gen = rand()%3; //33% chance to generate an enemy
 	
 	if (gen == 0 && num_enemy < MAX_ENEMIES) {
 		unsigned char i = 0;
@@ -140,15 +143,34 @@ void removeEnemy(unsigned char index){
 int enemy_tick(int state) {
 	switch (state) {
 		case enemy_move_init:
-			state = enemy_move_wait;
+			enemy_reset_flag = 0;
+			if (enemy_reset_flag){
+				state = enemy_move_init;
+				enemy_start = 0;
+			}
+			else if(!enemy_start){
+				state = enemy_move_init;
+			}
+			else{
+				state = enemy_move_wait;
+				enemy_start = 0;
+				initENEMY();
+			}
 			break;
 		case enemy_move_wait:
-			if (enemyticks == speed) {
+			if (enemy_reset_flag){
+				state = enemy_move_init;
+				enemy_reset_flag = 0;
+				enemyticks = 0;
+				enemy_start = 0;
+			}
+			else if (enemyticks == speed) {
 				state = enemy_move_move;
 				enemyticks = 0;
 			}
 			else if (shift_enemy_flag){
 				state = enemy_move_shift;
+				enemyticks++;
 			}
 			else {
 				state = enemy_move_wait;
@@ -156,10 +178,28 @@ int enemy_tick(int state) {
 			}
 			break;
 		case enemy_move_move:
-			state = enemy_move_wait;
+			if (enemy_reset_flag){
+				state = enemy_move_init;
+				enemy_reset_flag = 0;
+				enemyticks = 0;
+				enemy_start = 0;
+			}
+			else {
+				state = enemy_move_wait;
+				enemyticks++;
+			}
 			break;
 		case enemy_move_shift:
-			state = enemy_move_wait;
+			if (enemy_reset_flag){
+				state = enemy_move_init;
+				enemy_reset_flag = 0;
+				enemyticks = 0;
+				enemy_start = 0;
+			}
+			else {
+				state = enemy_move_wait;
+				enemyticks++;
+			}
 			break;
 		default:
 			state = enemy_move_init;
@@ -185,7 +225,10 @@ int enemy_tick(int state) {
 					}
 				}
 			}
-			checkEnemyHit();
+			checkStomp();
+			if(!enemy_death_flag){
+				checkEnemyHit();
+			}
 			break;
 		case enemy_move_shift:
 			shiftEnemies();

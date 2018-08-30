@@ -12,10 +12,12 @@
 
 //Flag set by move_task
 unsigned char shift_obj_flag = 0;
-
+ unsigned char obj_start = 0;
 //Array to hold locations of obstacles
 char objarray[MAX_OBJECTS]; //18 indicates there's no object initialized
 unsigned char num_objs = 0;
+
+unsigned char obj_reset_flag = 0;
 
 enum obj_state {obj_init, obj_wait, obj_shift};
 
@@ -56,7 +58,7 @@ void shiftObjects(void) {
 void generateNewObj(void) {
 	if(num_objs >= MAX_OBJECTS) return;
 	
-	unsigned char gen = rand() % 6; //16.7% chance to generate a new object
+	unsigned char gen = rand() % 3; //33% chance to generate a new object
 	if (gen == 0) {
 		unsigned char i = 0;
 		unsigned char temp = objarray[i];
@@ -72,10 +74,21 @@ int obj_tick(int state){
 	
 	switch(state){
 		case obj_init:
-			state = obj_wait;
+			obj_reset_flag = 0;
+			if(!obj_start){
+				state = obj_init;
+			} else {
+				state = obj_wait;
+				obj_start = 0;
+				initOBJ();
+			}
 			break;
 		case obj_wait:
-			if(shift_obj_flag){
+			if(obj_reset_flag){
+				state = obj_init;
+				obj_reset_flag = 0;
+			}
+			else if(shift_obj_flag){
 				state = obj_shift;
 			}
 			break;
