@@ -58,46 +58,38 @@ void clearScreen(void){
 }
 
 void createMessage(unsigned char score){
-	unsigned char scoreString[MAXDIGITS] = {};
 	unsigned char j = 0;
 	while(msg[j] != '\0' && j < 7) j++;
 	
-	short i = 0;
 	if (score == 0 ) {
 		msg[j] = '0';
 		msg[j+1] = '\0';
 		return;
 	}
-	while(score > 0 ){
-		scoreString[i] = score%10 + '0';
-		score = score/10;
-	}
 	
-	for(; i >= 0; i--){
-		msg[j++] = scoreString[i];
-	}
+	unsigned char tens = (score/10) + '0';
+	unsigned char ones = (score%10) + '0';
+	
+	if (tens > 0 )msg[j++] = tens;
+	msg[j++] = ones;
 	msg[j] = '\0';
 }
 
 void createHighScoreMessage(unsigned char score){
-	unsigned char scoreString[MAXDIGITS] = {};
 
 	unsigned char j = 0;
 	while(highScoreMsg[j] != '0' && j < (16 - MAXDIGITS) ) j++;
-	short i = 0;
 	if (score == 0 ){
 		highScoreMsg[j] = '0';
 		highScoreMsg[j+1] = '\0';
 		return;
 	}
-	while(score > 0 ){
-		scoreString[i] = score%10 + '0';
-		score = score/10;
-	}
 	
-	for(; i >= 0; i--){
-		highScoreMsg[j++] = scoreString[i];
-	}
+	unsigned char tens = (score/10) + '0';
+	unsigned char ones = (score%10) + '0';
+	
+	if(tens > 0) highScoreMsg[j++] = tens;
+	highScoreMsg[j++] = ones;
 	highScoreMsg[j] = '\0';
 }
 
